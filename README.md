@@ -1,2 +1,3 @@
 # CommunicationIPC
-The communication with same dll
+
+Simulate multiple APs using the same DLL and how they communicate

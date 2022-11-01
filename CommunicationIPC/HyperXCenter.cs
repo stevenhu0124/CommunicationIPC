@@ -19,16 +19,16 @@ namespace CommunicationIPC
         public void InitServer()
         {
             server = new PrimaryServer();
-            var primarInfo = server.InitServer();
+            var primaryInfo = server.InitServer();
 
-            if (!primarInfo.IsServerRunning)
+            if (!primaryInfo.IsServerRunning)
             {
-                server.CreateServer(primarInfo.ServerPort);
+                server.CreateServer(primaryInfo.ServerPort);
                 server.ReceivedNotification += Server_ReceivedNotification;
             }
             else
             {
-                int primaryPort = primarInfo.ServerPort;
+                int primaryPort = primaryInfo.ServerPort;
 
                 server = new SecondaryServer();
                 var secondaryInfo = server.InitServer();

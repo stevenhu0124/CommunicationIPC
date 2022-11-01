@@ -38,7 +38,6 @@ namespace CommunicationIPC
                     server.ReceivedNotification += Server_ReceivedNotification;
                     var secondaryServer = ((SecondaryServer)server);
                     secondaryServer.RequestPortsFromPrimary(primaryPort);
-                    secondaryServer.NotifySecondaryServerConnected();
                 }
             }
         }

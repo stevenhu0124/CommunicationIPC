@@ -1,10 +1,7 @@
-﻿
-using CommunicationIPC.Models;
+﻿using CommunicationIPC.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text.Json;
 
@@ -72,22 +69,6 @@ namespace CommunicationIPC.ListenerServer
             catch(Exception ex)
             {
                 Debug.Write(ex.ToString());
-            }
-        }
-
-        public void NotifySecondaryServerConnected()
-        {
-            foreach (var port in ClientServerPorts.Where(x => x != CurrentPort))
-            {
-                try
-                {
-                    var httpWebRequest = RequestServerResponse(port, ConnectionActions.RequestNewPortConnected, ConvertToJson(ClientServerPorts));
-                    var recevieData = ReceiveServerResponse(httpWebRequest);
-                }
-                catch
-                {
-                    //ClientServerPorts.Remove(port);
-                }
             }
         }
     }

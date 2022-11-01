@@ -127,7 +127,6 @@ namespace CommunicationIPC.ListenerServer
         /// <param name="recevieData"></param>
         protected void HandleRequestNewPortConnected(HttpListenerContext context, ConnectionModel recevieData)
         {
-            ReceivedNotification?.Invoke(string.Format("Connected Ports = {0}, Sender = {1}", recevieData.Message, recevieData.Sender));
             var requestModel = new ConnectionModel()
             {
                 Action = ConnectionActions.RequestNewPortConnected,
@@ -137,8 +136,17 @@ namespace CommunicationIPC.ListenerServer
 
             var json = ConvertToJson(requestModel);
             SendResponse(context, json);
+            TriggerNewServerConnected(string.Format("Connected Ports = {0}, Recevice by Sender = {1} -> HandleRequestNewPortConnected", recevieData.Message, recevieData.Sender));
         }
 
+        /// <summary>
+        /// Trigger new server connected
+        /// </summary>
+        /// <param name="message">message</param>
+        protected void TriggerNewServerConnected(string message)
+        {
+            ReceivedNotification?.Invoke(message);
+        }
 
         /// <summary>
         /// Create server
@@ -152,7 +160,7 @@ namespace CommunicationIPC.ListenerServer
             {
                 HttpListener listener = new HttpListener();
                 listener.Prefixes.Add(string.Format("http://127.0.0.1:{0}/", CurrentPort));
-                listener.Start();             
+                listener.Start();
                 while (listener.IsListening)
                 {
                     try
@@ -175,12 +183,12 @@ namespace CommunicationIPC.ListenerServer
         /// Get current port
         /// </summary>
         /// <returns></returns>
-        internal int GetCurrentPort() 
+        internal int GetCurrentPort()
         {
             return CurrentPort.Value;
         }
 
-        internal List<int> GetAllPorts() 
+        internal List<int> GetAllPorts()
         {
             return ClientServerPorts;
         }

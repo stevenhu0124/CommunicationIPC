@@ -1,5 +1,8 @@
 ﻿using CommunicationIPC.Models;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Net;
 
 namespace CommunicationIPC.ListenerServer
@@ -28,7 +31,7 @@ namespace CommunicationIPC.ListenerServer
                 }
                 else
                 {
-                    return new ConnectionState() { IsServerRunning = false, ServerPort = primaryPort};
+                    return new ConnectionState() { IsServerRunning = false, ServerPort = primaryPort };
                 }
             }
 
@@ -51,12 +54,7 @@ namespace CommunicationIPC.ListenerServer
 
                     break;
                 case ConnectionActions.RequestPrimaryServerPorts:
-
-                    if (!ClientServerPorts.Contains(recevieData.Sender))
-                    {
-                        ClientServerPorts.Add(recevieData.Sender);
-                    }
-
+                    CheckServersAlvie(recevieData.Sender);
                     ConnectionModel requestModel = new ConnectionModel()
                     {
                         Action = ConnectionActions.RequestPrimaryServerPorts,
@@ -66,14 +64,33 @@ namespace CommunicationIPC.ListenerServer
 
                     json = ConvertToJson(requestModel);
                     SendResponse(context, json);
-                    break;
-                case ConnectionActions.RequestNewPortConnected:
 
-                    HandleRequestNewPortConnected(context, recevieData);                  
+                    NotifyNewServerConnected(recevieData.Sender);
+                    break;
+                default:
+                    break;
+            }
+        }
 
-                    break;
-                default:  
-                    break;
+        private void CheckServersAlvie(int senderPort)
+        {
+            if (!ClientServerPorts.Contains(senderPort))
+            {
+                ClientServerPorts.Add(senderPort);
+            }
+
+            List<int> unavailablePorts = new List<int>();
+            foreach (var port in ClientServerPorts.Where(x => x != CurrentPort && x != senderPort))
+            {
+                if (!IsPortUsing(port))
+                {
+                    unavailablePorts.Add(port);
+                }
+            }
+
+            foreach (var port in unavailablePorts)
+            {
+                ClientServerPorts.Remove(port);
             }
         }
 
@@ -92,7 +109,7 @@ namespace CommunicationIPC.ListenerServer
                 // Receive Request server alive -> Step 3
                 var recevieData = ReceiveServerResponse(httpWebRequest);
                 if (recevieData.Action == ConnectionActions.RequestPrimaryServerAlive)
-                { 
+                {
                     return true;
                 }
                 else
@@ -104,6 +121,29 @@ namespace CommunicationIPC.ListenerServer
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Notify all servers with new server connected
+        /// </summary>
+        /// <param name="senderPort">Sender port</param>
+        public void NotifyNewServerConnected(int senderPort)
+        {
+            foreach (var port in ClientServerPorts.Where(x => x != CurrentPort && x != senderPort))
+            {
+                try
+                {
+                    var httpWebRequest = RequestServerResponse(port, ConnectionActions.RequestNewPortConnected, ConvertToJson(ClientServerPorts));
+                    var recevieData = ReceiveServerResponse(httpWebRequest);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.ToString());
+                }
+            }
+
+            var message = string.Join(",", ClientServerPorts);
+            TriggerNewServerConnected(string.Format("Connected Ports = [{0}], Trigger by Sender = {1} -> NotifyNewServerConnected", message, senderPort));
         }
     }
 }

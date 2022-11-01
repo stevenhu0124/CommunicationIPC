@@ -1,8 +1,5 @@
 ﻿using CommunicationIPC;
 using System;
-using System.Net.Sockets;
-using System.Net;
-using System.Text;
 
 namespace ConsoleApp
 {
@@ -36,7 +33,7 @@ namespace ConsoleApp
         private static void Center_ReceivedNotification(string msg)
         {
             Console.WriteLine("=========================== Receviced Connected event ===========================");
-            Console.WriteLine(msg);
+            Console.WriteLine(string.Format("{0}-{1}", DateTime.Now.ToString("yyyy/MM/dd/ HH:mm:ss"), msg));
         }
 
     }

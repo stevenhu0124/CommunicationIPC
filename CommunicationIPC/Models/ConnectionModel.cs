@@ -1,12 +1,13 @@
 ﻿namespace CommunicationIPC.Models
 {
-    public enum ConnectionActions
+    internal enum ConnectionActions
     {
+        RequestPrimaryServerAlive,
         RequestPrimaryServerPorts,
         RequestNewPortConnected,
     }
 
-    public class ConnectionModel
+    internal class ConnectionModel
     {
         public string Message { get; set; }
 

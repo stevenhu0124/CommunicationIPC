@@ -25,6 +25,8 @@ namespace CommunicationIPC
             {
                 server.CreateServer(primaryInfo.ServerPort);
                 server.ReceivedNotification += Server_ReceivedNotification;
+                var primaryServer = ((PrimaryServer)server);
+                primaryServer.CheckSecondaryServerAlive();
             }
             else
             {

@@ -40,6 +40,11 @@ namespace CommunicationIPC.ListenerServer
                 case ConnectionActions.RequestNewPortConnected:
                     HandleRequestNewPortConnected(context, recevieData);
                     break;
+                case ConnectionActions.RequestPrimaryServerAlive:
+                    recevieData.Sender = CurrentPort.Value;
+                    var json = ConvertToJson(recevieData);
+                    SendResponse(context, json);
+                    break;
                 default:
                     break;
             }
@@ -50,7 +55,7 @@ namespace CommunicationIPC.ListenerServer
         /// <summary>
         /// Request all server port's from primary server
         /// </summary>
-        public void RequestPortsFromPrimary(int primaryPort)
+        internal void RequestPortsFromPrimary(int primaryPort)
         {
             try
             {

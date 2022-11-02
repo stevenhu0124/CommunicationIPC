@@ -42,7 +42,7 @@ namespace CommunicationIPC.ListenerServer
         protected List<int> ClientServerPorts { get; set; }
 
         /// <summary>
-        /// Check primaryPort
+        /// Check port
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
@@ -146,6 +146,30 @@ namespace CommunicationIPC.ListenerServer
         protected void TriggerNewServerConnected(string message)
         {
             ReceivedNotification?.Invoke(message);
+        }
+
+        /// <summary>
+        /// Request to check if server alive
+        /// </summary>
+        protected bool RequestServerAlive(int port)
+        {
+            try
+            {
+                var httpWebRequest = RequestServerResponse(port, ConnectionActions.RequestPrimaryServerAlive, string.Empty);
+                var recevieData = ReceiveServerResponse(httpWebRequest);
+                if (recevieData.Action == ConnectionActions.RequestPrimaryServerAlive)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

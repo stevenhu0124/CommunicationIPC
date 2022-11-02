@@ -39,6 +39,27 @@ namespace CommunicationIPC.ListenerServer
         }
 
         /// <summary>
+        /// To check is secondary server is alive and update the new server list
+        /// </summary>
+        internal void CheckSecondaryServerAlive()
+        {
+            Tuple<int, int> SECONDARY_PORTS_RANGE = Tuple.Create(8880, 8890);
+
+            for (int secondaryPort = SECONDARY_PORTS_RANGE.Item1; secondaryPort < SECONDARY_PORTS_RANGE.Item2; secondaryPort++)
+            {
+                if (IsPortUsing(secondaryPort) && RequestServerAlive(secondaryPort))
+                {
+                    if (!ClientServerPorts.Contains(secondaryPort))
+                    {
+                        ClientServerPorts.Add(secondaryPort);
+                    }
+                }
+            }
+
+            NotifyNewServerConnected(CurrentPort.Value);
+        }
+
+        /// <summary>
         /// Handle the receive data
         /// </summary>
         /// <param name="context">HttpListenerContext</param>
@@ -94,40 +115,11 @@ namespace CommunicationIPC.ListenerServer
             }
         }
 
-
-
-        /// <summary>
-        /// Require primary server to provide all ports
-        /// </summary>
-        private bool RequestServerAlive(int primaryPort)
-        {
-            try
-            {
-                // Request server alive -> Step 1
-                var httpWebRequest = RequestServerResponse(primaryPort, ConnectionActions.RequestPrimaryServerAlive, string.Empty);
-
-                // Receive Request server alive -> Step 3
-                var recevieData = ReceiveServerResponse(httpWebRequest);
-                if (recevieData.Action == ConnectionActions.RequestPrimaryServerAlive)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         /// <summary>
         /// Notify all servers with new server connected
         /// </summary>
         /// <param name="senderPort">Sender port</param>
-        public void NotifyNewServerConnected(int senderPort)
+        private void NotifyNewServerConnected(int senderPort)
         {
             foreach (var port in ClientServerPorts.Where(x => x != CurrentPort && x != senderPort))
             {
@@ -142,8 +134,11 @@ namespace CommunicationIPC.ListenerServer
                 }
             }
 
-            var message = string.Join(",", ClientServerPorts);
-            TriggerNewServerConnected(string.Format("Connected Ports = [{0}], Trigger by Sender = {1} -> NotifyNewServerConnected", message, senderPort));
+            if (senderPort != CurrentPort)
+            {
+                var message = string.Join(",", ClientServerPorts);
+                TriggerNewServerConnected(string.Format("Connected Ports = [{0}], Trigger by Sender = {1} -> NotifyNewServerConnected", message, senderPort));
+            }
         }
     }
 }

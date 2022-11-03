@@ -19,10 +19,10 @@ namespace CommunicationIPC.ListenerServer
         internal event Action<string> ReceivedNotification;
 
         /// <summary>
-        /// InitServer server and get server state
+        /// GetServerConnectionState server and get server state
         /// </summary>
         /// <returns>Server state</returns>
-        internal abstract ConnectionState InitServer();
+        internal abstract ConnectionState GetServerConnectionState();
 
         /// <summary>
         /// Handle the receive data
@@ -137,9 +137,9 @@ namespace CommunicationIPC.ListenerServer
         {
             try
             {
-                var httpWebRequest = RequestServerResponse(port, ConnectionActions.RequestPrimaryServerAlive, string.Empty);
+                var httpWebRequest = RequestServerResponse(port, ConnectionActions.RequestServerAlive, string.Empty);
                 var recevieData = ReceiveServerResponse(httpWebRequest);
-                if (recevieData.Action == ConnectionActions.RequestPrimaryServerAlive)
+                if (recevieData.Action == ConnectionActions.RequestServerAlive)
                 {
                     return true;
                 }
@@ -175,7 +175,7 @@ namespace CommunicationIPC.ListenerServer
                         var request = context.Request;
                         using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
                         var recevieData = JsonSerializer.Deserialize<ConnectionModel>(reader.ReadToEnd());
-                        if (recevieData.Action == ConnectionActions.RequestPrimaryServerAlive)
+                        if (recevieData.Action == ConnectionActions.RequestServerAlive)
                         {
                             recevieData.Sender = CurrentPort.Value;
                             var json = ConvertToJson(recevieData);

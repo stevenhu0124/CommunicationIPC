@@ -2,9 +2,20 @@
 {
     internal enum ConnectionActions
     {
-        RequestPrimaryServerAlive,
-        RequestPrimaryServerPorts,
-        RequestNewPortConnected,
+        /// <summary>
+        ///  Check primary or secondary have response 
+        /// </summary>
+        RequestServerAlive,
+
+        /// <summary>
+        /// Secondary -> Primary
+        /// </summary>
+        RequestPrimaryServerConnected,
+
+        /// <summary>
+        /// Primary -> Secondary
+        /// </summary>
+        SendSecondaryNewConnected,
     }
 
     internal class ConnectionModel

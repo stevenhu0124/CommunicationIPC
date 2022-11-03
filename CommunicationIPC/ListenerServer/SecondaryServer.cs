@@ -9,13 +9,13 @@ namespace CommunicationIPC.ListenerServer
 {
     internal sealed class SecondaryServer : HttpListenerServerBase
     {
-        private readonly Tuple<int, int> SECONDARY_PORTS_RANGE = Tuple.Create(8880, 8890);
+        internal static readonly Tuple<int, int> SECONDARY_PORTS_RANGE = Tuple.Create(8880, 8890);
 
         /// <summary>
-        /// InitServer server and get server state
+        /// GetServerConnectionState server and get server state
         /// </summary>
         /// <returns>Server state</returns>
-        internal override ConnectionState InitServer()
+        internal override ConnectionState GetServerConnectionState()
         {
             for (int secondaryPort = SECONDARY_PORTS_RANGE.Item1; secondaryPort < SECONDARY_PORTS_RANGE.Item2; secondaryPort++)
             {
@@ -37,7 +37,7 @@ namespace CommunicationIPC.ListenerServer
         {
             switch (recevieData.Action)
             {
-                case ConnectionActions.RequestNewPortConnected:
+                case ConnectionActions.SendSecondaryNewConnected:
                     HandleRequestNewPortConnected(context, recevieData);
                     break;
                 default:
@@ -52,15 +52,17 @@ namespace CommunicationIPC.ListenerServer
         /// <param name="recevieData"></param>
         private void HandleRequestNewPortConnected(HttpListenerContext context, ConnectionModel recevieData)
         {
-            var requestModel = new ConnectionModel()
+            ClientServerPorts = JsonSerializer.Deserialize<List<int>>(recevieData.Message);
+
+            ConnectionModel response = new ConnectionModel() 
             {
-                Action = ConnectionActions.RequestNewPortConnected,
                 Sender = CurrentPort.Value,
-                Message = ConvertToJson(ClientServerPorts)
+                Action = recevieData.Action,
+                Message = recevieData.Message,
             };
 
-            var json = ConvertToJson(requestModel);
-            SendResponse(context, json);
+            var responseJson = ConvertToJson(response);
+            SendResponse(context, responseJson);
             TriggerNewServerConnected(string.Format("Connected Ports = {0}, Recevice by Sender = {1} -> HandleRequestNewPortConnected", recevieData.Message, recevieData.Sender));
         }
 
@@ -68,14 +70,14 @@ namespace CommunicationIPC.ListenerServer
         /// <summary>
         /// Request all server port's from primary server
         /// </summary>
-        internal void RequestPortsFromPrimary(int primaryPort)
+        internal void RequestConnectionToPrimaryServer(int primaryPort)
         {
             try
             {
-                var httpWebRequest = RequestServerResponse(primaryPort, ConnectionActions.RequestPrimaryServerPorts, string.Empty);
+                var httpWebRequest = RequestServerResponse(primaryPort, ConnectionActions.RequestPrimaryServerConnected, string.Empty);
                 var recevieData = ReceiveServerResponse(httpWebRequest);
 
-                if (recevieData.Action == ConnectionActions.RequestPrimaryServerPorts)
+                if (recevieData.Action == ConnectionActions.RequestPrimaryServerConnected)
                 {
                     ClientServerPorts = JsonSerializer.Deserialize<List<int>>(recevieData.Message);
                 }

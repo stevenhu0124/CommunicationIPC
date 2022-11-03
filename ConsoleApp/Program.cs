@@ -9,7 +9,7 @@ namespace ConsoleApp
         {
             try
             {
-                Console.WriteLine("=========================== InitServer Devices ===========================");
+                Console.WriteLine("=========================== GetServerConnectionState Devices ===========================");
                 HyperXCenter center = new HyperXCenter();
                 center.ReceivedNotification += Center_ReceivedNotification;
                 center.InitServer();

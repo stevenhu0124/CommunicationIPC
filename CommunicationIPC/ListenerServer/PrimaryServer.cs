@@ -10,11 +10,12 @@ namespace CommunicationIPC.ListenerServer
     internal sealed class PrimaryServer : HttpListenerServerBase
     {
         private readonly Tuple<int, int> PRIMARY_PORTS_RANGE = Tuple.Create(9990, 10000);
+      
         /// <summary>
-        /// InitServer server and get server state
+        /// GetServerConnectionState server and get server state
         /// </summary>
         /// <returns>Server state</returns>
-        internal override ConnectionState InitServer()
+        internal override ConnectionState GetServerConnectionState()
         {
             for (int primaryPort = PRIMARY_PORTS_RANGE.Item1; primaryPort < PRIMARY_PORTS_RANGE.Item2; primaryPort++)
             {
@@ -41,11 +42,9 @@ namespace CommunicationIPC.ListenerServer
         /// <summary>
         /// To check is secondary server is alive and update the new server list
         /// </summary>
-        internal void CheckSecondaryServerAlive()
+        internal void SendPortsToSecondaryServers()
         {
-            Tuple<int, int> SECONDARY_PORTS_RANGE = Tuple.Create(8880, 8890);
-
-            for (int secondaryPort = SECONDARY_PORTS_RANGE.Item1; secondaryPort < SECONDARY_PORTS_RANGE.Item2; secondaryPort++)
+            for (int secondaryPort = SecondaryServer.SECONDARY_PORTS_RANGE.Item1; secondaryPort < SecondaryServer.SECONDARY_PORTS_RANGE.Item2; secondaryPort++)
             {
                 if (IsPortUsing(secondaryPort) && RequestServerAlive(secondaryPort))
                 {
@@ -68,17 +67,17 @@ namespace CommunicationIPC.ListenerServer
         {
             switch (recevieData.Action)
             {
-                case ConnectionActions.RequestPrimaryServerPorts:
+                case ConnectionActions.RequestPrimaryServerConnected:
                     CheckServersAlvie(recevieData.Sender);
-                    ConnectionModel requestModel = new ConnectionModel()
+                    ConnectionModel response = new ConnectionModel()
                     {
-                        Action = ConnectionActions.RequestPrimaryServerPorts,
+                        Action = recevieData.Action,
                         Sender = CurrentPort.Value,
                         Message = ConvertToJson(ClientServerPorts)
                     };
 
-                    string json = ConvertToJson(requestModel);
-                    SendResponse(context, json);
+                    string responseJson = ConvertToJson(response);
+                    SendResponse(context, responseJson);
 
                     NotifyNewServerConnected(recevieData.Sender);
                     break;
@@ -119,7 +118,7 @@ namespace CommunicationIPC.ListenerServer
             {
                 try
                 {
-                    var httpWebRequest = RequestServerResponse(port, ConnectionActions.RequestNewPortConnected, ConvertToJson(ClientServerPorts));
+                    var httpWebRequest = RequestServerResponse(port, ConnectionActions.SendSecondaryNewConnected, ConvertToJson(ClientServerPorts));
                     var recevieData = ReceiveServerResponse(httpWebRequest);
                 }
                 catch (Exception ex)

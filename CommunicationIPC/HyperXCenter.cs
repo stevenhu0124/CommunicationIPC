@@ -19,27 +19,25 @@ namespace CommunicationIPC
         public void InitServer()
         {
             server = new PrimaryServer();
-            var primaryInfo = server.InitServer();
+            var primaryState = server.GetServerConnectionState();
 
-            if (!primaryInfo.IsServerRunning)
+            if (!primaryState.IsServerRunning)
             {
-                server.CreateServer(primaryInfo.ServerPort);
+                server.CreateServer(primaryState.ServerPort);
                 server.ReceivedNotification += Server_ReceivedNotification;
-                var primaryServer = ((PrimaryServer)server);
-                primaryServer.CheckSecondaryServerAlive();
+                ((PrimaryServer)server).SendPortsToSecondaryServers();
             }
             else
             {
-                int primaryPort = primaryInfo.ServerPort;
+                int primaryPort = primaryState.ServerPort;
 
                 server = new SecondaryServer();
-                var secondaryInfo = server.InitServer();
-                if (!secondaryInfo.IsServerRunning)
+                var secondaryState = server.GetServerConnectionState();
+                if (!secondaryState.IsServerRunning)
                 {
-                    server.CreateServer(secondaryInfo.ServerPort);
+                    server.CreateServer(secondaryState.ServerPort);
                     server.ReceivedNotification += Server_ReceivedNotification;
-                    var secondaryServer = ((SecondaryServer)server);
-                    secondaryServer.RequestPortsFromPrimary(primaryPort);
+                    ((SecondaryServer)server).RequestConnectionToPrimaryServer(primaryPort);
                 }
             }
         }

@@ -120,24 +120,6 @@ namespace CommunicationIPC.ListenerServer
             return JsonSerializer.Deserialize<ConnectionModel>(streamReader.ReadToEnd());
         }
 
-        /// <summary>
-        /// Handle request new requestPort connected, and trigger the ReceivedNotification event
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="recevieData"></param>
-        protected void HandleRequestNewPortConnected(HttpListenerContext context, ConnectionModel recevieData)
-        {
-            var requestModel = new ConnectionModel()
-            {
-                Action = ConnectionActions.RequestNewPortConnected,
-                Sender = CurrentPort.Value,
-                Message = ConvertToJson(ClientServerPorts)
-            };
-
-            var json = ConvertToJson(requestModel);
-            SendResponse(context, json);
-            TriggerNewServerConnected(string.Format("Connected Ports = {0}, Recevice by Sender = {1} -> HandleRequestNewPortConnected", recevieData.Message, recevieData.Sender));
-        }
 
         /// <summary>
         /// Trigger new server connected
@@ -193,7 +175,16 @@ namespace CommunicationIPC.ListenerServer
                         var request = context.Request;
                         using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
                         var recevieData = JsonSerializer.Deserialize<ConnectionModel>(reader.ReadToEnd());
-                        HandleReceiveData(context, recevieData);
+                        if (recevieData.Action == ConnectionActions.RequestPrimaryServerAlive)
+                        {
+                            recevieData.Sender = CurrentPort.Value;
+                            var json = ConvertToJson(recevieData);
+                            SendResponse(context, json);
+                        }
+                        else 
+                        {
+                            HandleReceiveData(context, recevieData);
+                        }                       
                     }
                     catch (Exception ex)
                     {

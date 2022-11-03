@@ -68,12 +68,6 @@ namespace CommunicationIPC.ListenerServer
         {
             switch (recevieData.Action)
             {
-                case ConnectionActions.RequestPrimaryServerAlive:
-                    recevieData.Sender = CurrentPort.Value;
-                    var json = ConvertToJson(recevieData);
-                    SendResponse(context, json);
-
-                    break;
                 case ConnectionActions.RequestPrimaryServerPorts:
                     CheckServersAlvie(recevieData.Sender);
                     ConnectionModel requestModel = new ConnectionModel()
@@ -83,7 +77,7 @@ namespace CommunicationIPC.ListenerServer
                         Message = ConvertToJson(ClientServerPorts)
                     };
 
-                    json = ConvertToJson(requestModel);
+                    string json = ConvertToJson(requestModel);
                     SendResponse(context, json);
 
                     NotifyNewServerConnected(recevieData.Sender);

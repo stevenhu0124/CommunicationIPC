@@ -40,15 +40,28 @@ namespace CommunicationIPC.ListenerServer
                 case ConnectionActions.RequestNewPortConnected:
                     HandleRequestNewPortConnected(context, recevieData);
                     break;
-                case ConnectionActions.RequestPrimaryServerAlive:
-                    recevieData.Sender = CurrentPort.Value;
-                    var json = ConvertToJson(recevieData);
-                    SendResponse(context, json);
-                    break;
                 default:
                     break;
             }
+        }
 
+        /// <summary>
+        /// Handle request new requestPort connected, and trigger the ReceivedNotification event
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="recevieData"></param>
+        private void HandleRequestNewPortConnected(HttpListenerContext context, ConnectionModel recevieData)
+        {
+            var requestModel = new ConnectionModel()
+            {
+                Action = ConnectionActions.RequestNewPortConnected,
+                Sender = CurrentPort.Value,
+                Message = ConvertToJson(ClientServerPorts)
+            };
+
+            var json = ConvertToJson(requestModel);
+            SendResponse(context, json);
+            TriggerNewServerConnected(string.Format("Connected Ports = {0}, Recevice by Sender = {1} -> HandleRequestNewPortConnected", recevieData.Message, recevieData.Sender));
         }
 
 
